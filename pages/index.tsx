@@ -235,7 +235,7 @@ export default function Home() {
                           style={{ fontSize: '0.82rem', padding: '0.6rem 1rem' }}
                           onClick={() => addToCart(product)}
                         >
-                          Agregar
+                          Agregar al Carrito
                         </button>
                         <a
                           className="button button-whatsapp"
@@ -332,16 +332,21 @@ export default function Home() {
                     </div>
                   </Link>
                   <div className="product-card-actions">
-                    <button className="button" onClick={() => addToCart(product)}>
-                      🛍️ Agregar al carrito
+                    <button
+                      className="button button-secondary"
+                      style={{ fontSize: '0.82rem', padding: '0.6rem 1rem' }}
+                      onClick={() => addToCart(product)}
+                    >
+                      Agregar al Carrito
                     </button>
                     <a
                       className="button button-whatsapp"
+                      style={{ fontSize: '0.82rem', padding: '0.6rem 1rem' }}
                       href={getWhatsAppLink(product.title)}
                       target="_blank"
                       rel="noreferrer"
                     >
-                      💬 WhatsApp
+                      WhatsApp
                     </a>
                   </div>
                 </div>
