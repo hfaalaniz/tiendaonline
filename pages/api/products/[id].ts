@@ -11,9 +11,10 @@ function supabase() {
 
 const ADMIN_SECRET = process.env.NEXT_PUBLIC_ADMIN_SECRET || ''
 
-export default async function handler(req: Request): Promise<Response> {
-  const id = new URL(req.url).pathname.split('/').pop()
-  if (!id || id === '[id]') return Response.json({ error: { message: 'ID inválido' } }, { status: 400 })
+export default async function handler(req: Request, ctx?: { params?: { id?: string } }): Promise<Response> {
+  const urlId = new URL(req.url).pathname.split('/').filter(Boolean).pop()
+  const id = ctx?.params?.id || (urlId !== '[id]' ? urlId : undefined)
+  if (!id) return Response.json({ error: { message: 'ID inválido' } }, { status: 400 })
 
   if (req.method === 'GET') {
     const { data, error } = await supabase()
