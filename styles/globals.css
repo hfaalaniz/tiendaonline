@@ -902,7 +902,7 @@ button, input, textarea, select {
 
 .cart-count-badge {
   position: absolute;
-  top: 4px;
+  top: 8px;
   right: 4px;
   min-width: 20px;
   height: 20px;
