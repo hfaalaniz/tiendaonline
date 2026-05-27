@@ -902,8 +902,8 @@ button, input, textarea, select {
 
 .cart-count-badge {
   position: absolute;
-  top: -8px;
-  right: -8px;
+  top: 4px;
+  right: 4px;
   min-width: 20px;
   height: 20px;
   padding: 0 4px;
