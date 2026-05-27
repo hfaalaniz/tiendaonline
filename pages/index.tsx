@@ -13,6 +13,7 @@ type Product = {
   image_url: string
   featured: boolean
   discount_pct?: number
+  stock?: number
 }
 
 function SkeletonCard() {
@@ -329,6 +330,11 @@ export default function Home() {
                         )}
                         <span className="view-link">Ver detalle</span>
                       </div>
+                      {product.stock !== undefined && (
+                        <span className={`stock-chip${product.stock === 0 ? ' out' : product.stock <= 3 ? ' low' : ''}`}>
+                          {product.stock === 0 ? 'Sin stock' : product.stock <= 3 ? `¡Últimas ${product.stock}!` : `${product.stock} disponibles`}
+                        </span>
+                      )}
                     </div>
                   </Link>
                   <div className="product-card-actions">

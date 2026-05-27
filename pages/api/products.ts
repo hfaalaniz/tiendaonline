@@ -28,10 +28,10 @@ export default async function handler(req: Request): Promise<Response> {
 
   if (req.method === 'POST') {
     const body = await req.json()
-    const { title, description, price, category, image_url, featured, active } = body
+    const { title, description, price, category, image_url, featured, active, stock } = body
     const { data, error } = await supabase()
       .from('products')
-      .insert([{ title, description, price, category, image_url, featured, active: active ?? true }])
+      .insert([{ title, description, price, category, image_url, featured, active: active ?? true, stock: stock ?? 0 }])
       .select()
       .single()
     if (error) return Response.json({ error: { message: error.message } }, { status: 500 })

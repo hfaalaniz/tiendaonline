@@ -33,9 +33,10 @@ export default async function handler(req: Request, ctx?: { params?: { id?: stri
 
   if (req.method === 'PUT') {
     const body = await req.json()
-    const { title, description, price, category, image_url, featured, active } = body
+    const { title, description, price, category, image_url, featured, active, stock } = body
     const updateFields: Record<string, unknown> = { title, description, price, category, image_url, featured }
     if (active !== undefined) updateFields.active = active
+    if (stock !== undefined) updateFields.stock = Math.max(0, Math.round(Number(stock) || 0))
 
     const { data, error } = await supabase()
       .from('products')

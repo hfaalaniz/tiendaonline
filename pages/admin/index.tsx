@@ -12,6 +12,7 @@ type Product = {
   featured: boolean
   active: boolean
   discount_pct: number
+  stock: number
   created_at: string
 }
 
@@ -22,11 +23,12 @@ type ProductForm = {
   category: string
   image_url: string
   featured: boolean
+  stock: string
   file?: File
 }
 
 const EMPTY_FORM: ProductForm = {
-  title: '', description: '', price: '', category: '', image_url: '', featured: false,
+  title: '', description: '', price: '', category: '', image_url: '', featured: false, stock: '0',
 }
 
 const ADMIN_SECRET = process.env.NEXT_PUBLIC_ADMIN_SECRET || ''
@@ -129,15 +131,27 @@ function ProductModal({
                 />
               </label>
               <label>
-                Categoría
+                Stock (unidades)
                 <input
-                  value={form.category}
-                  onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  placeholder="Ej: Aretes, Collares…"
-                  required
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={form.stock}
+                  onChange={(e) => setForm({ ...form, stock: e.target.value })}
+                  placeholder="0"
                 />
               </label>
             </div>
+
+            <label style={{ marginTop: '0.75rem' }}>
+              Categoría
+              <input
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                placeholder="Ej: Aretes, Collares…"
+                required
+              />
+            </label>
 
             <label style={{ marginTop: '0.75rem' }}>
               Imagen — URL o archivo
@@ -600,6 +614,7 @@ export default function AdminPage() {
       category: product.category,
       image_url: product.image_url,
       featured: product.featured,
+      stock: (product.stock ?? 0).toString(),
     })
     setPreview(product.image_url)
     setModalError('')
@@ -652,6 +667,7 @@ export default function AdminPage() {
         category: form.category,
         image_url: imageUrl,
         featured: form.featured,
+        stock: Math.max(0, Math.round(Number(form.stock) || 0)),
       }
       const method = editingId ? 'PUT' : 'POST'
       const endpoint = editingId ? `/api/products/${editingId}` : '/api/products'
@@ -898,6 +914,9 @@ export default function AdminPage() {
                     </span>
                     <span className="atr-meta">
                       {product.category} — {product.description.length > 55 ? product.description.slice(0, 55) + '…' : product.description}
+                      {' '}<span className={`stock-chip${(product.stock ?? 0) === 0 ? ' out' : (product.stock ?? 0) <= 3 ? ' low' : ''}`}>
+                        {(product.stock ?? 0) === 0 ? 'Sin stock' : `Stock: ${product.stock}`}
+                      </span>
                     </span>
                   </div>
 

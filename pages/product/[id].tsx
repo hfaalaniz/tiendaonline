@@ -14,6 +14,7 @@ type Product = {
   image_url: string
   featured: boolean
   discount_pct?: number
+  stock?: number
 }
 
 export default function ProductDetail() {
@@ -150,6 +151,18 @@ export default function ProductDetail() {
             ) : (
               <div className="price-large">
                 <sup>$</sup>{product.price.toFixed(2)}
+              </div>
+            )}
+
+            {product.stock !== undefined && (
+              <div style={{ marginBottom: '1rem' }}>
+                <span className={`stock-chip stock-chip-lg${product.stock === 0 ? ' out' : product.stock <= 3 ? ' low' : ''}`}>
+                  {product.stock === 0
+                    ? '✕ Sin stock'
+                    : product.stock <= 3
+                    ? `⚡ ¡Últimas ${product.stock} unidades!`
+                    : `✓ ${product.stock} unidades disponibles`}
+                </span>
               </div>
             )}
 
