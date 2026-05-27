@@ -665,10 +665,9 @@ export default function AdminPage() {
                   key={product.id}
                 >
                   {/* Miniatura */}
-                  <div
-                    className="table-image atc-thumb"
-                    style={{ backgroundImage: `url(${product.image_url})` }}
-                  />
+                  <div className="table-image atc-thumb">
+                    <img src={product.image_url} alt={product.title} />
+                  </div>
 
                   {/* Nombre + descripción */}
                   <div className="atc-name">
@@ -760,7 +759,9 @@ export default function AdminPage() {
                       className={`admin-table-row offers-table-row${hasOffer ? ' offers-row-active' : ''}`}
                       key={product.id}
                     >
-                      <div className="table-image atc-thumb" style={{ backgroundImage: `url(${product.image_url})` }} />
+                      <div className="table-image atc-thumb">
+                        <img src={product.image_url} alt={product.title} />
+                      </div>
                       <div className="atc-name">
                         <span className="atr-title">{product.title}</span>
                         <span className="atr-meta">{product.category}</span>
