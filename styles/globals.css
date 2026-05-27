@@ -2230,6 +2230,182 @@ select {
 }
 
 /* =============================================
+   BULK UPDATE
+   ============================================= */
+
+.bulk-panel {
+  padding: 1.5rem;
+  display: grid;
+  gap: 2rem;
+}
+
+.bulk-step {
+  display: grid;
+  gap: 1rem;
+}
+
+.bulk-step-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.bulk-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.bulk-step-title {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.bulk-category-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.bulk-category-btn {
+  padding: 0.45rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-soft);
+  background: var(--surface);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.bulk-category-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.bulk-category-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+  font-weight: 600;
+}
+
+.bulk-ops-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.bulk-op-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-soft);
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.bulk-op-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+.bulk-op-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.bulk-op-label {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.bulk-op-btn.active .bulk-op-label {
+  color: var(--accent);
+}
+
+.bulk-op-desc {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.bulk-value-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.bulk-value-hint {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.bulk-bool-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.bulk-bool-btn {
+  padding: 0.65rem 1.25rem;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-soft);
+  background: var(--surface);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.bulk-bool-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.bulk-bool-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+  font-weight: 600;
+}
+
+.bulk-bool-btn.active.danger {
+  background: #e53e3e;
+  border-color: #e53e3e;
+}
+
+.bulk-execute {
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-soft);
+}
+
+/* =============================================
    ADMIN TABS
    ============================================= */
 

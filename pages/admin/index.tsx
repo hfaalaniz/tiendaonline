@@ -286,6 +286,221 @@ function OfferModal({
   )
 }
 
+/* ── Sección actualización masiva ──────────────────────── */
+type BulkOp = 'price_pct' | 'price_fixed' | 'discount' | 'active' | 'featured'
+
+const BULK_OPS: { value: BulkOp; label: string; description: string }[] = [
+  { value: 'price_pct',   label: '📈 Ajustar precio (%)',     description: 'Aumentar o reducir el precio en un porcentaje. Ej: +10 sube 10%, -15 baja 15%.' },
+  { value: 'price_fixed', label: '💲 Precio fijo',            description: 'Establecer el mismo precio para todos los productos de la categoría.' },
+  { value: 'discount',    label: '🏷️ Descuento (%)',          description: 'Aplicar un descuento a toda la categoría. Poner 0 para quitar ofertas.' },
+  { value: 'active',      label: '⏸ Activar / Pausar',       description: 'Activar o desactivar todos los productos de la categoría.' },
+  { value: 'featured',    label: '⭐ Destacar / Quitar',      description: 'Marcar o quitar como destacado todos los productos de la categoría.' },
+]
+
+function BulkSection({
+  categories,
+  headers,
+  onDone,
+}: {
+  categories: string[]
+  headers: Record<string, string>
+  onDone: (msg: string) => void
+}) {
+  const [category, setCategory] = useState(categories[0] || '')
+  const [op, setOp] = useState<BulkOp>('price_pct')
+  const [numValue, setNumValue] = useState('')
+  const [boolValue, setBoolValue] = useState(true)
+  const [running, setRunning] = useState(false)
+  const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null)
+
+  const currentOp = BULK_OPS.find(o => o.value === op)!
+  const needsNum = op === 'price_pct' || op === 'price_fixed' || op === 'discount'
+  const needsBool = op === 'active' || op === 'featured'
+
+  const handleRun = async () => {
+    if (!category) return
+    const confirmed = confirm(
+      `¿Confirmar actualización masiva?\n\nCategoría: ${category}\nOperación: ${currentOp.label}${needsNum ? `\nValor: ${numValue}` : ''}\n\nEsta acción afecta a TODOS los productos de la categoría.`
+    )
+    if (!confirmed) return
+
+    setRunning(true)
+    setResult(null)
+    try {
+      const body: Record<string, unknown> = { type: op, category }
+      if (needsNum) body.value = Number(numValue)
+      if (needsBool) body.value = boolValue
+
+      const res = await fetch('/api/bulk-update', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setResult({ ok: false, msg: data.error || 'Error desconocido' })
+      } else {
+        const msg = `✓ ${currentOp.label} aplicado a ${data.count} productos de "${category}"`
+        setResult({ ok: true, msg })
+        onDone(msg)
+      }
+    } catch (e) {
+      setResult({ ok: false, msg: String(e) })
+    } finally {
+      setRunning(false)
+    }
+  }
+
+  return (
+    <section className="admin-full-section">
+      <div className="admin-toolbar" style={{ padding: '1.25rem 1.5rem' }}>
+        <div>
+          <p className="eyebrow">Edición por lote</p>
+          <h2 style={{ margin: '0.2rem 0 0', fontSize: '1.3rem' }}>Actualización masiva</h2>
+        </div>
+        <p style={{ fontFamily: 'var(--font-sans)', fontSize: '0.875rem', color: 'var(--muted)', margin: 0 }}>
+          Aplicá cambios a todos los productos de una categoría a la vez.
+        </p>
+      </div>
+
+      <div className="bulk-panel">
+
+        {/* Paso 1 — Categoría */}
+        <div className="bulk-step">
+          <div className="bulk-step-header">
+            <span className="bulk-step-num">1</span>
+            <span className="bulk-step-title">Seleccioná la categoría</span>
+          </div>
+          <div className="bulk-category-grid">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                className={`bulk-category-btn${category === cat ? ' active' : ''}`}
+                onClick={() => setCategory(cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Paso 2 — Operación */}
+        <div className="bulk-step">
+          <div className="bulk-step-header">
+            <span className="bulk-step-num">2</span>
+            <span className="bulk-step-title">Elegí la operación</span>
+          </div>
+          <div className="bulk-ops-grid">
+            {BULK_OPS.map(o => (
+              <button
+                key={o.value}
+                className={`bulk-op-btn${op === o.value ? ' active' : ''}`}
+                onClick={() => setOp(o.value)}
+              >
+                <span className="bulk-op-label">{o.label}</span>
+                <span className="bulk-op-desc">{o.description}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Paso 3 — Valor */}
+        <div className="bulk-step">
+          <div className="bulk-step-header">
+            <span className="bulk-step-num">3</span>
+            <span className="bulk-step-title">Configurá el valor</span>
+          </div>
+
+          {needsNum && (
+            <div className="bulk-value-row">
+              {op === 'price_pct' && (
+                <>
+                  <input
+                    type="number"
+                    value={numValue}
+                    onChange={e => setNumValue(e.target.value)}
+                    placeholder="Ej: 10 (subir 10%) o -15 (bajar 15%)"
+                    style={{ maxWidth: 320 }}
+                  />
+                  <span className="bulk-value-hint">%</span>
+                </>
+              )}
+              {op === 'price_fixed' && (
+                <>
+                  <span className="bulk-value-hint">$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={numValue}
+                    onChange={e => setNumValue(e.target.value)}
+                    placeholder="Precio nuevo para todos"
+                    style={{ maxWidth: 320 }}
+                  />
+                </>
+              )}
+              {op === 'discount' && (
+                <>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={numValue}
+                    onChange={e => setNumValue(e.target.value)}
+                    placeholder="0 = quitar oferta, 1-100 = % de descuento"
+                    style={{ maxWidth: 320 }}
+                  />
+                  <span className="bulk-value-hint">%</span>
+                </>
+              )}
+            </div>
+          )}
+
+          {needsBool && (
+            <div className="bulk-bool-row">
+              <button
+                className={`bulk-bool-btn${boolValue ? ' active' : ''}`}
+                onClick={() => setBoolValue(true)}
+              >
+                {op === 'active' ? '▶ Activar todos' : '⭐ Destacar todos'}
+              </button>
+              <button
+                className={`bulk-bool-btn${!boolValue ? ' active danger' : ''}`}
+                onClick={() => setBoolValue(false)}
+              >
+                {op === 'active' ? '⏸ Pausar todos' : '✕ Quitar destacado'}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Ejecutar */}
+        <div className="bulk-execute">
+          {result && (
+            <p className={result.ok ? 'success-message' : 'error-message'} style={{ margin: '0 0 1rem' }}>
+              {result.msg}
+            </p>
+          )}
+          <button
+            className="button"
+            style={{ minWidth: 220, fontSize: '0.95rem', padding: '0.85rem 2rem' }}
+            onClick={handleRun}
+            disabled={running || !category || (needsNum && numValue === '')}
+          >
+            {running ? '⏳ Aplicando…' : `⚡ Aplicar a "${category}"`}
+          </button>
+          {category && (
+            <p style={{ fontFamily: 'var(--font-sans)', fontSize: '0.8rem', color: 'var(--muted)', marginTop: '0.5rem' }}>
+              Se confirmará antes de ejecutar. Afecta a todos los productos de la categoría <strong>{category}</strong>.
+            </p>
+          )}
+        </div>
+
+      </div>
+    </section>
+  )
+}
+
 /* ── Página principal ───────────────────────────────────── */
 export default function AdminPage() {
   const [products, setProducts] = useState<Product[]>([])
@@ -302,7 +517,7 @@ export default function AdminPage() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'all' | 'featured' | 'active' | 'inactive'>('all')
   const [offerModalProduct, setOfferModalProduct] = useState<Product | null>(null)
-  const [activeTab, setActiveTab] = useState<'products' | 'offers'>('products')
+  const [activeTab, setActiveTab] = useState<'products' | 'offers' | 'bulk'>('products')
 
   const headers = useMemo(
     () => ({ 'Content-Type': 'application/json', 'x-admin-secret': ADMIN_SECRET }),
@@ -597,6 +812,12 @@ export default function AdminPage() {
               <span className="admin-tab-badge">{products.filter(p => p.discount_pct > 0).length}</span>
             )}
           </button>
+          <button
+            className={`admin-tab${activeTab === 'bulk' ? ' active' : ''}`}
+            onClick={() => setActiveTab('bulk')}
+          >
+            ⚡ Actualización masiva
+          </button>
         </div>
 
         {/* ── Listado de productos ── */}
@@ -795,6 +1016,15 @@ export default function AdminPage() {
               </div>
             )}
           </section>
+        )}
+
+        {/* ── Sección Actualización Masiva ── */}
+        {activeTab === 'bulk' && (
+          <BulkSection
+            categories={Array.from(new Set(products.map(p => p.category))).sort()}
+            headers={headers}
+            onDone={(msg) => { showMsg(msg); loadProducts() }}
+          />
         )}
       </main>
     </>
