@@ -1,52 +1,45 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
-import { supabaseAdmin } from '../../lib/supabaseAdmin'
+import { createClient } from '@supabase/supabase-js'
 
-type Data = {
-  data?: unknown
-  error?: { message: string }
+export const runtime = 'edge'
+
+function supabase() {
+  return createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
 }
 
 const ADMIN_SECRET = process.env.NEXT_PUBLIC_ADMIN_SECRET || ''
 
-const validateAdmin = (req: NextApiRequest) => {
-  const secret = req.headers['x-admin-secret'] as string | undefined
-  return secret === ADMIN_SECRET
-}
-
-// GET  — lista productos con oferta activa (discount_pct > 0)
-// PUT  — actualiza discount_pct de uno o varios productos (admin)
-export default async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
+export default async function handler(req: Request): Promise<Response> {
   if (req.method === 'GET') {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase()
       .from('products')
       .select('*')
       .gt('discount_pct', 0)
       .order('discount_pct', { ascending: false })
-    if (error) return res.status(500).json({ error: { message: error.message } })
-    return res.status(200).json({ data })
+    if (error) return Response.json({ error: { message: error.message } }, { status: 500 })
+    return Response.json({ data })
   }
 
-  if (!validateAdmin(req)) {
-    return res.status(401).json({ error: { message: 'No autorizado' } })
+  const secret = req.headers.get('x-admin-secret')
+  if (secret !== ADMIN_SECRET) {
+    return Response.json({ error: { message: 'No autorizado' } }, { status: 401 })
   }
 
-  // PUT: { id, discount_pct }  — aplica o quita descuento a un producto
   if (req.method === 'PUT') {
-    const { id, discount_pct } = req.body as { id: string; discount_pct: number }
-    if (!id) return res.status(400).json({ error: { message: 'Falta id' } })
-
+    const { id, discount_pct } = await req.json()
+    if (!id) return Response.json({ error: { message: 'Falta id' } }, { status: 400 })
     const pct = Math.min(Math.max(Number(discount_pct) || 0, 0), 100)
-
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase()
       .from('products')
       .update({ discount_pct: pct })
       .eq('id', id)
       .select()
       .single()
-
-    if (error) return res.status(500).json({ error: { message: error.message } })
-    return res.status(200).json({ data })
+    if (error) return Response.json({ error: { message: error.message } }, { status: 500 })
+    return Response.json({ data })
   }
 
-  return res.status(405).json({ error: { message: 'Método no permitido' } })
+  return Response.json({ error: { message: 'Método no permitido' } }, { status: 405 })
 }

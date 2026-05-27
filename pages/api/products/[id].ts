@@ -1,73 +1,68 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
-import { supabaseAdmin } from '../../../lib/supabaseAdmin'
+import { createClient } from '@supabase/supabase-js'
 
-type Data = {
-  data?: unknown
-  error?: { message: string }
+export const runtime = 'edge'
+
+function supabase() {
+  return createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
 }
 
 const ADMIN_SECRET = process.env.NEXT_PUBLIC_ADMIN_SECRET || ''
 
-const validateAdmin = (req: NextApiRequest) => {
-  const secret = req.headers['x-admin-secret'] as string | undefined
-  return secret === ADMIN_SECRET
-}
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
-  const { id } = req.query
-  if (!id || Array.isArray(id)) {
-    return res.status(400).json({ error: { message: 'ID inválido' } })
-  }
+export default async function handler(req: Request, ctx: { params: { id: string } }): Promise<Response> {
+  const id = ctx.params?.id
+  if (!id) return Response.json({ error: { message: 'ID inválido' } }, { status: 400 })
 
   if (req.method === 'GET') {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase()
       .from('products')
       .select('*')
       .eq('id', id)
       .single()
-    if (error) return res.status(404).json({ error: { message: error.message } })
-    return res.status(200).json({ data })
+    if (error) return Response.json({ error: { message: error.message } }, { status: 404 })
+    return Response.json({ data })
   }
 
-  if (!validateAdmin(req)) {
-    return res.status(401).json({ error: { message: 'Se requiere autenticación de administrador' } })
+  const secret = req.headers.get('x-admin-secret')
+  if (secret !== ADMIN_SECRET) {
+    return Response.json({ error: { message: 'Se requiere autenticación de administrador' } }, { status: 401 })
   }
 
   if (req.method === 'PUT') {
-    const { title, description, price, category, image_url, featured, active } = req.body
-    const updateFields: Record<string, unknown> = {
-      title, description, price, category, image_url, featured,
-    }
+    const body = await req.json()
+    const { title, description, price, category, image_url, featured, active } = body
+    const updateFields: Record<string, unknown> = { title, description, price, category, image_url, featured }
     if (active !== undefined) updateFields.active = active
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase()
       .from('products')
       .update(updateFields)
       .eq('id', id)
       .select()
       .single()
 
-    // Si el error es por columna inexistente, reintentar sin el campo active
     if (error && active !== undefined && error.message.includes('active')) {
-      const { data: data2, error: error2 } = await supabaseAdmin
+      const { data: data2, error: error2 } = await supabase()
         .from('products')
         .update({ title, description, price, category, image_url, featured })
         .eq('id', id)
         .select()
         .single()
-      if (error2) return res.status(500).json({ error: { message: error2.message } })
-      return res.status(200).json({ data: data2 })
+      if (error2) return Response.json({ error: { message: error2.message } }, { status: 500 })
+      return Response.json({ data: data2 })
     }
 
-    if (error) return res.status(500).json({ error: { message: error.message } })
-    return res.status(200).json({ data })
+    if (error) return Response.json({ error: { message: error.message } }, { status: 500 })
+    return Response.json({ data })
   }
 
   if (req.method === 'DELETE') {
-    const { error } = await supabaseAdmin.from('products').delete().eq('id', id)
-    if (error) return res.status(500).json({ error: { message: error.message } })
-    return res.status(200).json({ data: { message: 'Producto eliminado' } })
+    const { error } = await supabase().from('products').delete().eq('id', id)
+    if (error) return Response.json({ error: { message: error.message } }, { status: 500 })
+    return Response.json({ data: { message: 'Producto eliminado' } })
   }
 
-  return res.status(405).json({ error: { message: 'Método no permitido' } })
+  return Response.json({ error: { message: 'Método no permitido' } }, { status: 405 })
 }
