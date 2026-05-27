@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "PowerShell(Get-ChildItem -Path \"c:\\\\Users\\\\Fabian\\\\tiendaonline\" -Recurse | Select-Object FullName, PSIsContainer | Sort-Object FullName | ForEach-Object { if \\($_.PSIsContainer\\) { $_.FullName + \"\\\\\" } else { $_.FullName } })",
-      "PowerShell(Get-ChildItem -Path \"c:\\\\Users\\\\Fabian\\\\tiendaonline\" -Depth 3 -Exclude node_modules, .next | Select-Object FullName | Sort-Object FullName | ForEach-Object { $_.FullName })"
+      "PowerShell(Get-ChildItem -Path \"c:\\\\Users\\\\Fabian\\\\tiendaonline\" -Depth 3 -Exclude node_modules, .next | Select-Object FullName | Sort-Object FullName | ForEach-Object { $_.FullName })",
+      "Bash(git ls-remote *)"
     ]
   }
 }
